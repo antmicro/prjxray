@@ -34,6 +34,10 @@ top.fasm: top.bit
 	$(XRAY_BIT2FASM) --verbose $< > $@ \
         || (rm -f top.fasm && exit 1)
 
+top.vpr.fasm: top.vpr.bit
+	$(XRAY_BIT2FASM) --verbose $< > $@ \
+        || (rm -f top.fasm && exit 1)
+
 top.bits: top.bit
 	$(XRAY_BITREAD) -part_file $(XRAY_PART_YAML) -o top.bits -z -y top.bit
 
@@ -43,7 +47,13 @@ segprint.log: top.bits
 top.frames: top.fasm
 	$(XRAY_FASM2FRAMES) $< $@
 
+top.vpr.frames: top.vpr.fasm
+	$(XRAY_FASM2FRAMES) $< $@
+
 top.f2b.bit: top.frames
+	$(XRAY_DIR)/build/tools/xc7frames2bit --output_file $@ --part_name $(XRAY_PART) --part_file $(XRAY_PART_YAML) --frm_file $<
+
+top.vpr.f2b.bit: top.vpr.frames
 	$(XRAY_DIR)/build/tools/xc7frames2bit --output_file $@ --part_name $(XRAY_PART) --part_file $(XRAY_PART_YAML) --frm_file $<
 
 program: top.f2b.bit

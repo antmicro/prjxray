@@ -47,7 +47,7 @@ class _CRG(Module):
 
 class MinSoC(SoCSDRAM):
     def __init__(
-            self, sys_clk_freq=int(50e6), integrated_rom_size=0x8000,
+            self, sys_clk_freq=int(60e6), integrated_rom_size=0x8000,
             **kwargs):
         platform = arty.Platform()
 
