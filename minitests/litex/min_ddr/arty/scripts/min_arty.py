@@ -47,7 +47,7 @@ class _CRG(Module):
 
 class MinSoC(SoCSDRAM):
     def __init__(
-            self, sys_clk_freq=int(60e6), integrated_rom_size=0x8000,
+            self, sys_clk_freq=int(100e6), integrated_rom_size=0x8000,
             **kwargs):
         platform = arty.Platform()
 
@@ -71,7 +71,7 @@ class MinSoC(SoCSDRAM):
                 memtype="DDR3",
                 nphases=4,
                 sys_clk_freq=sys_clk_freq)
-            self.add_csr("ddrphy")
+            self.add_csr("ddrphy", 5)
             sdram_module = MT41K128M16(sys_clk_freq, "1:4")
             self.register_sdram(
                 self.ddrphy,
