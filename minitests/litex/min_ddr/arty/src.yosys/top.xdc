@@ -1,5 +1,11 @@
-set_property LOC J5 [get_ports rdy]
-set_property IOSTANDARD LVCMOS33 [get_ports rdy]
+set_property LOC H5 [get_ports led[0]]
+set_property IOSTANDARD LVCMOS33 [get_ports led[0]]
+set_property LOC J5 [get_ports led[1]]
+set_property IOSTANDARD LVCMOS33 [get_ports led[1]]
+set_property LOC T9 [get_ports led[2]]
+set_property IOSTANDARD LVCMOS33 [get_ports led[2]]
+set_property LOC T10 [get_ports led[3]]
+set_property IOSTANDARD LVCMOS33 [get_ports led[3]]
  ## serial:0.tx
 set_property LOC D10 [get_ports serial_tx]
 set_property IOSTANDARD LVCMOS33 [get_ports serial_tx]
