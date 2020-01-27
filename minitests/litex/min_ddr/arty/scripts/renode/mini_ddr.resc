@@ -1,0 +1,13 @@
+:name: Micropython @ LiteX VexRiscv
+:description: This script runs Micropython on LiteX+VexRiscv platform (without LiteX BIOS bootloader)
+
+$name?="LiteX+VexRiscv"
+
+using sysbus
+mach create $name
+machine LoadPlatformDescription @./renode/mini_ddr.repl #Needs absolute path
+
+sysbus LoadBinary @./soc_minsoc_arty/software/bios/bios.bin 0 #Needs absolute path
+
+showAnalyzer sysbus.uart
+sysbus.cpu PC 0

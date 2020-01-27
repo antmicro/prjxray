@@ -1,0 +1,16 @@
+1. Generate the etherbone mini ddr bitstream and csr.csv file and program the FPGA
+	./etherbone_min_ddr.py --csr-csv csr.csv
+	xc3sprog -cable nexys4 ./soc_etherboneminsoc_arty/gateware/top.bit
+
+2. Generate the matching bios.bin file
+	./min_ddr.py --csr-csv csr.csv
+
+3. Start litex server to connect to etherbone bridge:
+	litex_server --uart --uart-port /dev/ttyUSB2 --uart-baudrate 115200
+
+4. Start Renode and load the renode source file:
+	include @./scripts/EthBrd.cs
+	include @./scripts/mini_ddr.resc
+
+5. Start execution in Renode:
+	start
