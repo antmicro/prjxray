@@ -23,6 +23,7 @@ ${YOSYS} -p "tcl synth.tcl" -l yosys.log
 source /opt/Xilinx/Vivado/2017.2/settings64.sh
 
 cd build
-vivado -mode batch -source ../top_yosys.tcl -nojournal -tclargs ${XRAY_PART} ${XDC} top.edif
+${XRAY_VIVADO} -mode batch -source ../top_yosys.tcl -nojournal -tclargs ${XRAY_PART} ${XDC} top.edif
+${XRAY_BIT2FASM} --part ${XRAY_PART} top.bit > top.fasm
 cd ..
 

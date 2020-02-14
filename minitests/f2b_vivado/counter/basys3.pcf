@@ -1,0 +1,7 @@
+# basys3 100 MHz CLK
+set_io clk W5
+
+set_io led[0] U16
+set_io led[1] E19
+set_io led[2] U19
+set_io led[3] V19

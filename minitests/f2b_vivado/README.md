@@ -9,6 +9,7 @@ This utility scripts are useful to run the following flow:
 
 The following things must be done in order to correctly use this utility:
 
+- `source ../../settings/artix7.sh`
 - `XRAY_PART` env variable must be exported with the exact part that is meant for the design
 - `ARCH_DEFS_DIRECTORY` env variable must be exported to point to the root location of the SymbiFlow-arch-defs directory
 

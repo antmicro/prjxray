@@ -17,6 +17,8 @@ write_checkpoint -force top_f2b_route.dcp
 
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
 set_property IS_ENABLED 0 [get_drc_checks {LUTLP-1}]
+set_property IS_ENABLED 0 [get_drc_checks {NSTD-1}]
+set_property IS_ENABLED 0 [get_drc_checks {UCIO-1}]
 
 write_bitstream -force top_f2b.bit
 
