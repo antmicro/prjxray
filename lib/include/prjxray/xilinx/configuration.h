@@ -246,6 +246,7 @@ Configuration<ArchType>::InitWithPackets(const typename ArchType::Part& part,
 	Configuration<ArchType>::FrameMap frames;
 	bool configuration_data_end = false;
 	for (auto packet : packets) {
+		std::cout << packet;
 		if (packet.opcode() !=
 		    ConfigurationPacket<
 		        typename ArchType::ConfRegType>::Opcode::Write) {
@@ -291,6 +292,7 @@ Configuration<ArchType>::InitWithPackets(const typename ArchType::Part& part,
 				if (packet.data().size() < 1)
 					continue;
 				frame_address_register = packet.data()[0];
+				std::cout << std::hex << frame_address_register << std::endl;
 
 				// Per UG470, the command present in the CMD
 				// register is executed each time the FAR
@@ -328,12 +330,20 @@ Configuration<ArchType>::InitWithPackets(const typename ArchType::Part& part,
 					frames[current_frame_address] =
 					    packet.data().subspan(
 					        ii, ArchType::words_per_frame);
+					std::cout << "Address: " << current_frame_address << std::endl;
+					//std::cout << "Content: ";
+					//for (auto& val : packet.data())
+					//	std::cout << std::hex << val << std::endl;
+					std::cout << "Content2: ";
+					for (auto& val :frames[current_frame_address])
+						std::cout << std::hex << val << std::endl;
 
 					auto next_address =
 					    part.GetNextFrameAddress(
 					        current_frame_address);
 					if (!next_address) {
 						configuration_data_end = true;
+						std::cout << "END" << std::endl;
 						break;
 					}
 
@@ -361,6 +371,13 @@ Configuration<ArchType>::InitWithPackets(const typename ArchType::Part& part,
 		}
 	}
 
+	std::cout << "Content2: ";
+	for (typename FrameMap::iterator iter = frames.begin(); iter != frames.end(); ++iter) {
+		std::cout << "Key: " << std::hex << iter->first << std::endl;
+		for (auto& val : iter->second) {
+			std::cout << std::hex << val << std::endl;
+		}
+	}
 	return Configuration(part, frames);
 }
 

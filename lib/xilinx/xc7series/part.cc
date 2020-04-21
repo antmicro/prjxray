@@ -11,6 +11,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
 namespace prjxray {
 namespace xilinx {
@@ -40,6 +41,7 @@ absl::optional<FrameAddress> Part::GetNextFrameAddress(
 	    (address.is_bottom_half_rows()
 	         ? bottom_region_.GetNextFrameAddress(address)
 	         : top_region_.GetNextFrameAddress(address));
+	//std::cout << "Next address: " << std::hex << *next_address << std::endl;
 	if (next_address)
 		return next_address;
 
