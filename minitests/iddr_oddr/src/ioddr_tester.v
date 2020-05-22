@@ -1,5 +1,6 @@
 module ioddr_tester (
     input  wire CLK,
+    input  wire CLKB,
     output wire ERR,
     output wire Q,
     input  wire D
@@ -7,6 +8,7 @@ module ioddr_tester (
 
     parameter USE_PHY_ODDR = 1;
     parameter USE_PHY_IDDR = 1;
+    parameter USE_IDELAY   = 0;
     parameter DDR_CLK_EDGE = "SAME_EDGE";
 
     // Data generator
@@ -47,10 +49,12 @@ module ioddr_tester (
     // IDDR
     wire [1:0] r_dat;
     iddr_wrapper # (
+        .USE_IDELAY     (USE_IDELAY),
         .USE_PHY_IDDR   (USE_PHY_IDDR),
         .DDR_CLK_EDGE   (DDR_CLK_EDGE)
     ) iddr_wrapper (
         .C              (CLK),
+        .CB             (CLKB),
         .CE             (1'b1),
         .S              (0),
         .R              (0),
