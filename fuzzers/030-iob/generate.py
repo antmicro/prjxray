@@ -73,9 +73,24 @@ def main():
     # by the vendor tools so need to be skipped
     pudc_tiles = set()
     with open(os.path.join(os.getenv('FUZDIR'), 'build',
-                           'pudc_sites.csv')) as f:
+                           'pin_func.csv')) as f:
         for l in csv.DictReader(f):
-            pudc_tiles.add(l["tile"])
+            if "PUDC_B" in l["pin_func"]:
+                pudc_tiles.add(l["tile"])
+
+    # Load IO bank Vref settings
+    iobank_vref = {}
+    with open('iobank_vref.csv') as f:
+        for l in f:
+            iobank, vref = l.strip().split(',')
+            iobank = int(iobank)
+
+            try:
+                vref = float(vref)
+            except ValueError:
+                vref = None
+
+            iobank_vref[iobank] = vref
 
     print("Loading tags")
     segmk = Segmaker("design.bits")
@@ -99,14 +114,32 @@ def main():
             if d['tile'] in pudc_tiles:
                 continue
 
-            if site in diff_pairs:
-                continue
-
             iostandard = verilog.unquote(d['IOSTANDARD'])
             if iostandard.startswith('DIFF_'):
                 iostandard = iostandard[5:]
 
             iobank_iostandards[site_to_iobank[site]].add(iostandard)
+
+            if d['type'] in ["IBUFDS"]:
+                if True:
+#                if iostandard in ['SSTL135', 'SSTL15']:
+                    iobank = site_to_iobank[site]
+#                    vref = iobank_vref.get(iobank, None)
+                    if iobank in iobank_vref:
+                        vref = iobank_vref[iobank]
+                        segmk.add_site_tag(site, 'VREF.INT', vref is not None)
+                        segmk.add_site_tag(site, 'VREF.EXT', vref is None)
+                        segmk.add_tile_tag(d['tile'], 'TILE_VREF.INT', vref is not None)
+                        segmk.add_tile_tag(d['tile'], 'TILE_VREF.EXT', vref is None)
+
+#            elif d['type'] is None:
+#                segmk.add_site_tag(site, 'VREF.INT', 0)
+#                segmk.add_site_tag(site, 'VREF.EXT', 0)
+#                segmk.add_tile_tag(d['tile'], 'TILE_VREF.INT', 0)
+#                segmk.add_tile_tag(d['tile'], 'TILE_VREF.EXT', 0)
+
+            if site in diff_pairs:
+                continue
 
             segmk.add_site_tag(
                 site, '_'.join(STEPDOWN_IOSTANDARDS) + '.STEPDOWN',
@@ -119,6 +152,14 @@ def main():
                         'UNTUNED_SPLIT_60'
                     ], 'NONE', d['IN_TERM'])
 
+
+#            if d['type'] in ["IBUF", "IOBUF", "IBUFDS", "IOBUFDS", "IOBUF_INTERMDISABLE"]:
+#                iobank = site_to_iobank[site]
+#                if iobank in iobank_vref:
+#                    vref = iobank_vref[iobank]
+#                    segmk.add_site_tag(site, 'VREF.INT', vref is not None)
+#                    segmk.add_site_tag(site, 'VREF.EXT', vref is None)
+                
             if d['type'] is None:
                 segmk.add_site_tag(site, 'INOUT', 0)
                 segmk.add_site_tag(site, '{}.IN_USE'.format(iostandard), 0)
@@ -237,26 +278,27 @@ def main():
 
     # For each IOBANK with an active VREF set the feature
     cmt_vref_active = set()
-    with open('iobank_vref.csv') as f:
-        for l in f:
-            iobank, vref = l.strip().split(',')
-            iobank = int(iobank)
+    for iobank, vref in iobank_vref.items():
 
-            cmt = None
-            for cmt_site in iobanks[iobank]:
-                if cmt_site in site_to_cmt:
-                    cmt = site_to_cmt[cmt_site]
-                    break
+        cmt = None
+        for cmt_site in iobanks[iobank]:
+            if cmt_site in site_to_cmt:
+                cmt = site_to_cmt[cmt_site]
+                break
 
-            if cmt is None:
-                continue
+        if cmt is None:
+            continue
 
-            cmt_vref_active.add(cmt)
+        cmt_vref_active.add(cmt)
 
-            _, hclk_cmt_tile = cmt_to_idelay[cmt]
+        _, hclk_cmt_tile = cmt_to_idelay[cmt]
 
+        if vref is None:
+            opt = "VREF.EXTERNAL"
+        else:
             opt = 'VREF.V_{:d}_MV'.format(int(float(vref) * 1000))
-            segmk.add_tile_tag(hclk_cmt_tile, opt, 1)
+
+        segmk.add_tile_tag(hclk_cmt_tile, opt, 1)
 
     for iobank in iobank_iostandards:
         if len(iobank_iostandards[iobank]) == 0:
@@ -291,6 +333,8 @@ def main():
         ):
             opt = 'VREF.V_{:d}_MV'.format(int(vref * 1000))
             segmk.add_tile_tag(hclk_cmt_tile, opt, 0)
+
+        segmk.add_tile_tag(hclk_cmt_tile, "VREF.EXTERNAL", 0)
 
     segmk.compile(bitfilter=bitfilter)
     segmk.write(allow_empty=True)

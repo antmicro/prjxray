@@ -93,8 +93,10 @@ proc set_vref {} {
         set parts [split $line ","]
         set iobank [lindex $parts 0]
         set vref [lindex $parts 1]
-        puts "setting $iobank ([get_iobanks $iobank]) to INTERNAL_VREF $vref"
-        set_property INTERNAL_VREF $vref [get_iobanks $iobank]
+        if {$vref != "None"} {
+            puts "setting $iobank ([get_iobanks $iobank]) to INTERNAL_VREF $vref"
+            set_property INTERNAL_VREF $vref [get_iobanks $iobank]
+        }
     }
 }
 

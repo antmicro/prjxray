@@ -11,6 +11,7 @@
 import json
 import io
 import os
+import csv
 import random
 random.seed(int(os.getenv("SEED"), 16))
 from prjxray import util
@@ -116,10 +117,17 @@ def run():
 
     params['iobanks'] = iobanks
 
+    vref_tiles = set()
+    with open(os.path.join(os.getenv('FUZDIR'), 'build', 'pin_func.csv')) as f:
+        for l in csv.DictReader(f):
+            if "VREF" in l["pin_func"]:
+                vref_tiles.add(l["tile"])
+
     if iostandard in ['SSTL135', 'SSTL15']:
         for iobank in iobanks:
             params['INTERNAL_VREF'][iobank] = random.choice(
                 (
+                    None,
                     .600,
                     .675,
                     .75,
@@ -128,8 +136,13 @@ def run():
 
     any_idelay = False
     for tile, sites in gen_sites():
+
+        if tile in vref_tiles:
+            continue
+
         site_bels = {}
-        for site_type in sites:
+        for site_type, site in sites.items():
+
             if site_type.endswith('M'):
                 if iostandard in diff_map:
                     site_bels[site_type] = random.choice(
