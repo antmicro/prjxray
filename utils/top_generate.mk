@@ -9,7 +9,7 @@ top.v.ok:
 	touch top.v.ok
 
 vivado.ok: top.v.ok ${FUZDIR}/generate.tcl
-	${XRAY_VIVADO} -mode batch -source ${FUZDIR}/generate.tcl
+	${XRAY_VIVADO} -mode batch -source ${FUZDIR}/generate.tcl || if [ $? -eq 137 && -f "${FUZDIR}/allow_segfault" ] ; then true; fi
 	test -z "$(fgrep CRITICAL vivado.log)"
 	touch vivado.ok
 

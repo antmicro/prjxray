@@ -40,6 +40,12 @@ def main():
 
     routes_file = open('routes.txt', 'w')
 
+    def gen_true_false(p):
+        if random.random() <= p:
+            return verilog.quote("TRUE")
+        else:
+            return verilog.quote("FALSE")
+
     print(
         """
 module top(
@@ -136,7 +142,40 @@ module top(
                 'HIGH',
                 'LOW',
             ))),
+            "CLKFBOUT_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT0_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT1_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT2_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT3_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT4_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT5_USE_FINE_PS":
+            gen_true_false(0.50),
+            "CLKOUT6_USE_FINE_PS":
+            gen_true_false(0.50),
+            "SS_EN":
+            gen_true_false(0.15),
+            "SS_MODE":
+            verilog.quote(random.choice([
+                "DOWN_LOW",
+                "DOWN_HIGH",
+                "CENTER_LOW",
+                "CENTER_HIGH"
+            ])),
+            "SS_MOD_PERIOD":
+            random.randint(4000, 40000),
+            "CLKOUT4_CASCADE": # FIXME: Sometime makes Vivado segfault
+            verilog.quote("FALSE"), #gen_true_false(0.15),
         }
+
+        # SS_EN requires BANDWIDTH to be LOW
+        if verilog.unquote(params["SS_EN"]) == "TRUE":
+            params["BANDWIDTH"] = verilog.quote("LOW")
 
         if verilog.unquote(params['COMPENSATION']) == 'ZHOLD':
             params['clkfbin_conn'] = random.choice(
@@ -217,12 +256,33 @@ module top(
     wire den_{site};
     wire dwe_{site};
 
+    wire psclk_{site};
+    wire psen_{site};
+    wire psincdec_{site};
+
+    (* KEEP, DONT_TOUCH *)
     LUT1 den_lut_{site} (
         .O(den_{site})
     );
 
+    (* KEEP, DONT_TOUCH *)
     LUT1 dwe_lut_{site} (
         .O(dwe_{site})
+    );
+
+    (* KEEP, DONT_TOUCH *)
+    LUT1 psclk_lut_{site} (
+        .O(psckl_{site})
+    );
+
+    (* KEEP, DONT_TOUCH *)
+    LUT1 psen_lut_{site} (
+        .O(psen_{site})
+    );
+
+    (* KEEP, DONT_TOUCH *)
+    LUT1 psincdec_lut_{site} (
+        .O(psincdec_{site})
     );
 
     wire clkfbout_mult_{site};
@@ -252,9 +312,21 @@ module top(
             .CLKOUT0_DUTY_CYCLE({CLKOUT0_DUTY_CYCLE}),
             .COMPENSATION({COMPENSATION}),
             .BANDWIDTH({BANDWIDTH}),
+            .CLKFBOUT_USE_FINE_PS({CLKFBOUT_USE_FINE_PS}),
+            .CLKOUT0_USE_FINE_PS({CLKOUT0_USE_FINE_PS}),
+            .CLKOUT1_USE_FINE_PS({CLKOUT1_USE_FINE_PS}),
+            .CLKOUT2_USE_FINE_PS({CLKOUT2_USE_FINE_PS}),
+            .CLKOUT3_USE_FINE_PS({CLKOUT3_USE_FINE_PS}),
+            .CLKOUT4_USE_FINE_PS({CLKOUT4_USE_FINE_PS}),
+            .CLKOUT5_USE_FINE_PS({CLKOUT5_USE_FINE_PS}),
+            .CLKOUT6_USE_FINE_PS({CLKOUT6_USE_FINE_PS}),
+            .CLKOUT4_CASCADE({CLKOUT4_CASCADE}),
+            .SS_EN({SS_EN}),
+            .SS_MODE({SS_MODE}),
+            .SS_MOD_PERIOD({SS_MOD_PERIOD}),
             .CLKIN1_PERIOD(10.0),
             .CLKIN2_PERIOD(10.0)
-    ) pll_{site} (
+    ) mmcm_{site} (
             .CLKFBOUT(clkfbout_mult_{site}),
             .CLKOUT0(clkout0_{site}),
             .CLKOUT1(clkout1_{site}),
@@ -263,6 +335,9 @@ module top(
             .CLKOUT4(clkout4_{site}),
             .CLKOUT5(clkout5_{site}),
             .CLKOUT6(clkout6_{site}),
+            .PSCLK(psclk_{site}),
+            .PSEN(psen_{site}),
+            .PSINCDEC(psincdec_{site}),
             .DRDY(),
             .LOCKED(),
             .DO(),

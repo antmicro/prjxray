@@ -130,6 +130,30 @@ def bus_tags(segmk, ps, site):
 #        site, 'COMPENSATION.INTERNAL',
 #        verilog.unquote(ps['COMPENSATION']) in ['INTERNAL'])
 
+    for param, val in ps.items():
+        if param.endswith("_USE_FINE_PS"):
+            opt = (verilog.unquote(val) == "TRUE")
+            segmk.add_site_tag(site, param, opt)
+
+    opt = (verilog.unquote(ps["SS_EN"]) == "TRUE")
+    segmk.add_site_tag(site, "SS_EN", opt)
+
+    if verilog.unquote(ps["SS_EN"]) == "TRUE":
+
+        for mode in ["DOWN_LOW", "DOWN_HIGH", "CENTER_LOW", "CENTER_HIGH"]:
+            tag = "SS_MODE_" + mode
+            opt = (verilog.unquote(ps["SS_MODE"]) == mode)
+            segmk.add_site_tag(site, tag, opt)
+
+        bitstr = "{:016b}".format(ps["SS_MOD_PERIOD"])
+        for i in range(16):
+            tag = "SS_MOD_PERIOD[{}]".format(i)
+            opt = (bitstr[i] == "1")
+            segmk.add_site_tag(site, tag, opt)
+
+    opt = (ps["CLKOUT4_CASCADE"] == "TRUE")
+    segmk.add_site_tag(site, "CLKOUT4_CASCADE", opt)
+
     for param in ['CLKFBOUT_MULT_F']:
         paramadj = int(ps[param])
         bitstr = [int(x) for x in "{0:09b}".format(paramadj)[::-1]]
