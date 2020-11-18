@@ -1,1 +1,14 @@
 There is zero frame at the end of each row
+Without fix
+573766c573766                                              
+< 00000000000000001000000000000000                         
+---                                                        
+> 00000000000000000000000000000000                         
+573866c573866                                              
+< 11111000101000010111101101110000                         
+---                                                        
+> 00100010000001110101000101010000                         
+bits2rbt_bram_xc7 FAIL  
+
+With fix
+bit_00c0017f_004_15 is in bits, but rbt fails
