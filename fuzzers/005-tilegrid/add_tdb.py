@@ -119,6 +119,7 @@ def run(fn_in, fn_out, verbose=False):
         ("cfg_int", int_frames, int_words),
         ("monitor_int", int_frames, int_words),
         ("orphan_int_column", int_frames, int_words),
+        ("gtp_channel", 32, 22),
     ]
 
     auto_align_list = ["gtp_common"]

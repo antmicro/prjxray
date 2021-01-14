@@ -34,6 +34,7 @@ ifeq (${XRAY_DATABASE}, artix7)
 # Artix7 only
 TILEGRID_TDB_DEPENDENCIES += pcie/$(BUILD_FOLDER)/segbits_tilegrid.tdb
 TILEGRID_TDB_DEPENDENCIES += gtp_common/$(BUILD_FOLDER)/segbits_tilegrid.tdb
+TILEGRID_TDB_DEPENDENCIES += gtp_channel/$(BUILD_FOLDER)/segbits_tilegrid.tdb
 endif
 
 ifeq (${XRAY_DATABASE}, zynq7)
@@ -143,6 +144,9 @@ pcie/$(BUILD_FOLDER)/segbits_tilegrid.tdb: ${BASICDB_TILEGRID}
 gtp_common/$(BUILD_FOLDER)/segbits_tilegrid.tdb: ${BASICDB_TILEGRID}
 	cd gtp_common && $(MAKE)
 
+gtp_channel/$(BUILD_FOLDER)/segbits_tilegrid.tdb: ${BASICDB_TILEGRID}
+	cd gtp_channel && $(MAKE)
+
 $(BUILD_FOLDER)/tilegrid_tdb.json: add_tdb.py $(TILEGRID_TDB_DEPENDENCIES)
 	python3 add_tdb.py \
 		--fn-in ${BASICDB_TILEGRID} \
@@ -184,6 +188,7 @@ clean:
 	cd hclk_ioi && $(MAKE) clean
 	cd pcie && $(MAKE) clean
 	cd gtp_common && $(MAKE) clean
+	cd gtp_channel && $(MAKE) clean
 
 .PHONY: database pushdb clean run
 
