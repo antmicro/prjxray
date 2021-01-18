@@ -39,7 +39,7 @@ def parse_addr(line, only_frame=False, get_base_frame=False):
     return frame, wordidx, bitidx
 
 
-def load_db(fn):
+def load_db(fn, auto_align):
     for l in open(fn, "r"):
         l = l.strip()
         # FIXME: add offset to name
@@ -56,10 +56,13 @@ def load_db(fn):
 
         tparts = tagstr.split('.')
         tile = tparts[0]
+
+        frame_offset_applied = False
         for part in tparts[1:]:
             k, v = part.split(':')
             if k == "DFRAME":
                 frame -= int(v, 16)
+                frame_offset_applied = True
             elif k == "DWORD":
                 wordidx -= int(v, 10)
             elif k == "DBIT":
@@ -73,7 +76,11 @@ def load_db(fn):
         if not bitidx_up:
             bitidx = 0
         assert bitidx == 0, l
-        assert frame % 0x80 == 0, "Unaligned frame at 0x%08X" % frame
+
+        if not frame_offset_applied and auto_align:
+            frame -= frame % 0x80
+        else:
+            assert frame % 0x80 == 0, "Unaligned frame at 0x%08X" % frame
         yield (tile, frame, wordidx)
 
 
@@ -114,6 +121,8 @@ def run(fn_in, fn_out, verbose=False):
         ("orphan_int_column", int_frames, int_words),
     ]
 
+    auto_align_list = ["gtp_common"]
+
     for (subdir, frames, words) in tdb_fns:
         tdb_fn = os.path.join(
             subdir, 'build_{}'.format(os.environ['XRAY_PART']),
@@ -122,7 +131,8 @@ def run(fn_in, fn_out, verbose=False):
             verbose and print('Skipping {}, file not found!'.format(tdb_fn))
             continue
 
-        for (tile, frame, wordidx) in load_db(tdb_fn):
+        auto_align = subdir in auto_align_list
+        for (tile, frame, wordidx) in load_db(tdb_fn, auto_align):
             tilej = database[tile]
             verbose and print("Add %s %08X_%03u" % (tile, frame, wordidx))
             localutil.add_tile_bits(tile, tilej, frame, wordidx, frames, words)
