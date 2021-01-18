@@ -163,6 +163,12 @@ case "$1" in
 	gtp_common)
 		cp "$2" "$tmp1" ;;
 
+	gtp_common_mid_left)
+		cp "$2" "$tmp1" ;;
+
+	gtp_common_mid_right)
+		sed < "$2" > "$tmp1" -e 's/^GTP_COMMON_MID_LEFT\./GTP_COMMON_MID_RIGHT./' ;;
+
 	mask_*)
 		db=$XRAY_DATABASE_DIR/$XRAY_DATABASE/$1.db
 		ismask=true
