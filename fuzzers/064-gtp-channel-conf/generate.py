@@ -23,7 +23,7 @@ STR = "STR"
 
 def bitfilter(frame, bit):
     # Filter out interconnect bits.
-    if frame not in [28, 29, 30, 31]:
+    if frame not in [28, 29, 30, 31, 0, 1, 2, 3]:
         return False
 
     return True
@@ -39,53 +39,55 @@ def main():
 
     print("Loading tags")
     with open("params.json") as f:
-        params = json.load(f)
+        params_list = json.load(f)
 
-    site = params["site"]
-    in_use = params["IN_USE"]
+    for params in params_list:
+        site = params["site"]
+        in_use = params["IN_USE"]
 
-    segmk.add_site_tag(site, "IN_USE", in_use)
+        segmk.add_site_tag(site, "IN_USE", in_use)
 
-    for param, param_info in attrs.items():
-        value = params[param]
-        param_type = param_info["type"]
-        param_digits = param_info["digits"]
-        param_values = param_info["values"]
+        if in_use:
+            for param, param_info in attrs.items():
+                value = params[param]
+                param_type = param_info["type"]
+                param_digits = param_info["digits"]
+                param_values = param_info["values"]
 
-        if param_type == INT:
-            param_encodings = param_info["encoding"]
-            param_encoding = param_encodings[param_values.index(value)]
-            bitstr = [
-                int(x) for x in "{value:0{digits}b}".format(
-                    value=param_encoding, digits=param_digits)[::-1]
-            ]
+                if param_type == INT:
+                    param_encodings = param_info["encoding"]
+                    param_encoding = param_encodings[param_values.index(value)]
+                    bitstr = [
+                        int(x) for x in "{value:0{digits}b}".format(
+                            value=param_encoding, digits=param_digits)[::-1]
+                    ]
 
-            for i in range(param_digits):
-                segmk.add_site_tag(site, '%s[%u]' % (param, i), bitstr[i])
-        elif param_type == BIN:
-            bitstr = [
-                int(x) for x in "{value:0{digits}b}".format(
-                    value=value, digits=param_digits)[::-1]
-            ]
+                    for i in range(param_digits):
+                        segmk.add_site_tag(site, '%s[%u]' % (param, i), bitstr[i])
+                elif param_type == BIN:
+                    bitstr = [
+                        int(x) for x in "{value:0{digits}b}".format(
+                            value=value, digits=param_digits)[::-1]
+                    ]
 
-            for i in range(param_digits):
-                segmk.add_site_tag(site, "%s[%u]" % (param, i), bitstr[i])
-        elif param_type == BOOL:
-            segmk.add_site_tag(site, param, value == "TRUE")
-        else:
-            assert param_type == STR
+                    for i in range(param_digits):
+                        segmk.add_site_tag(site, "%s[%u]" % (param, i), bitstr[i])
+                elif param_type == BOOL:
+                    segmk.add_site_tag(site, param, value == "TRUE")
+                else:
+                    assert param_type == STR
 
-            for param_value in param_values:
-                segmk.add_site_tag(site, "{}.{}".format(param, param_value), value == param_value)
+                    for param_value in param_values:
+                        segmk.add_site_tag(site, "{}.{}".format(param, param_value), value == param_value)
 
-        for param, invert in [("TXUSRCLK", 1), ("TXUSRCLK2", 1), ("TXPHDLYTSTCLK", 1),
-                      ("SIGVALIDCLK", 1), ("RXUSRCLK", 1), ("RXUSRCLK2", 1),
-                      ("DRPCLK", 1), ("DMONITORCLK", 1), ("CLKRSVD0", 1),
-                      ("CLKRSVD1", 1)]:
-            if invert:
-                segmk.add_site_tag(site, "ZINV_" + param, 1 ^ params[param])
-            else:
-                segmk.add_site_tag(site, "INV_" + param, params[param])
+            for param, invert in [("TXUSRCLK", 1), ("TXUSRCLK2", 1), ("TXPHDLYTSTCLK", 1),
+                          ("SIGVALIDCLK", 1), ("RXUSRCLK", 1), ("RXUSRCLK2", 1),
+                          ("DRPCLK", 1), ("DMONITORCLK", 1), ("CLKRSVD0", 1),
+                          ("CLKRSVD1", 1)]:
+                if invert:
+                    segmk.add_site_tag(site, "ZINV_" + param, 1 ^ params[param])
+                else:
+                    segmk.add_site_tag(site, "INV_" + param, params[param])
 
     segmk.compile(bitfilter=bitfilter)
     segmk.write()

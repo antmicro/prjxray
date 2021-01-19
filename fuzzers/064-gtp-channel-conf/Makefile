@@ -5,27 +5,46 @@
 # https://opensource.org/licenses/ISC
 #
 # SPDX-License-Identifier: ISC
+
+SHELL = bash
+
 N ?= 40
 
-include ../fuzzer.mk
+SPECIMENS := $(addprefix build/specimen_,$(shell seq -f '%03.0f' $(N)))
+SPECIMENS_OK := $(addsuffix /OK,$(SPECIMENS))
+FUZDIR ?= ${PWD}
+
+all: database
+
+# generate.sh / top_generate.sh call make, hence the command must
+# have a + before it.
+$(SPECIMENS_OK): $(SPECIMENS_DEPS)
+	mkdir -p build
+	bash ${XRAY_DIR}/utils/top_generate.sh $(subst /OK,,$@)
+
+run:
+	$(MAKE) clean
+	$(MAKE) database
+	$(MAKE) pushdb
+	touch run.${XRAY_PART}.ok
+
+clean:
+	rm -rf build run.ok
+
+.PHONY: all run clean
 
 database: build/segbits_gtp_channelx.db
 
 build/segbits_gtp_channelx.rdb: $(SPECIMENS_OK)
-	${XRAY_SEGMATCH} -o build/segbits_gtp_channelx.rdb $(addsuffix /segdata_gtp_channel_[0123].txt,$(SPECIMENS))
+	${XRAY_SEGMATCH} -o build/segbits_gtp_channelx.rdb $$(find $(SPECIMENS) -name "segdata_gtp_channel_[0123]*")
 
 build/segbits_gtp_channelx.db: build/segbits_gtp_channelx.rdb
-	${XRAY_DBFIXUP} --db-root build --zero-db bits.dbf --seg-fn-in $^ --seg-fn-out $@
-	${XRAY_MASKMERGE} build/mask_gtp_channelx.db $(addsuffix /segdata_gtp_channel_[0123].txt,$(SPECIMENS))
+	${XRAY_DBFIXUP} --db-root build --zero-db bits.dbf \
+		--seg-fn-in build/segbits_gtp_channelx.rdb \
+		--seg-fn-out build/segbits_gtp_channelx.db
+	${XRAY_MASKMERGE} build/mask_gtp_channelx.db $$(find $(SPECIMENS) -name "segdata_gtp_channel_[0123]*")
 
 pushdb:
-	${XRAY_MERGEDB} gtp_channel_0 build/segbits_gtp_channelx.db
-	${XRAY_MERGEDB} gtp_channel_1 build/segbits_gtp_channelx.db
-	${XRAY_MERGEDB} gtp_channel_2 build/segbits_gtp_channelx.db
-	${XRAY_MERGEDB} gtp_channel_3 build/segbits_gtp_channelx.db
-	${XRAY_MERGEDB} mask_gtp_channel_0 build/mask_gtp_channelx.db
-	${XRAY_MERGEDB} mask_gtp_channel_1 build/mask_gtp_channelx.db
-	${XRAY_MERGEDB} mask_gtp_channel_2 build/mask_gtp_channelx.db
-	${XRAY_MERGEDB} mask_gtp_channel_3 build/mask_gtp_channelx.db
+	source pushdb.sh
 
 .PHONY: database pushdb
