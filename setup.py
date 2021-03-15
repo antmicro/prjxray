@@ -29,6 +29,9 @@ setuptools.setup(
         "License :: OSI Approved :: ISC License",
         "Operating System :: OS Independent",
     ],
+    install_requires=[
+        "pyyaml",
+    ]
     entry_points={
         'console_scripts': ['fasm2frames=utils.fasm2frames:main'],
     })
